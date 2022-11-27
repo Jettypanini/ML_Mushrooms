@@ -45,7 +45,7 @@ def listToString(s):
  
     # traverse in the string
     for i in range(len(s)):
-        str1 += str(int(s[i]))
+        str1 += str(s[i])
  
     # return string
     return str1
@@ -75,11 +75,15 @@ def main():
             newcode.append(encode(row[i],i))
         listToString(newcode)
         result += listToString(newcode) + ","
+      
     return result
 
 #print(encode("e",0))
 #typeSize = [2,6,4,10,2,9,4,3,2,12,2,7,4,4,9,9,2,4,3,8,9,6,7]
 my_string = main()
+
+#print(listToString(encode("e",0)))
+#print(my_string)
 
 with open('encodedShrooms.csv', 'w') as out:
     out.write(my_string)
