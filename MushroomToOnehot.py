@@ -63,9 +63,16 @@ def listToString2(s):
     return str1
 
 #data = char from csv
-#type is number drom iterator
+#type is number from iterator
 def encode(data,type):
+    #special case (poisonous is binary encoded)
+    if type == 0:
+        if data == 'p':
+            return "1"
+        else:
+             return "0"
     body = np.zeros(len(allElements[type])) #create array of zeroes equal to length of parameters per feature
+    
     index = 0
     for item in allElements[type]:
         if(data == item):
@@ -83,8 +90,9 @@ def main():
         #print("item "+ str(index) +":")
         newcode = []
         for i in range(22):
-            temp = encode(row[i],i)
-            newcode.append(temp)
+            if len(allElements[i]) > 1:
+                temp = encode(row[i],i)
+                newcode.append(temp)
         listToString(newcode)
         result += listToString2(newcode) + ",\n"
       
@@ -102,10 +110,11 @@ def calcSize():
     sum = 0
     for i in range (0,len(allElements)):
         sum = sum + len(allElements[i])
-        print(sum)
+        print(len(allElements[i]))
     print(sum)
+calcSize()
 
-with open('encodedShrooms420.csv', 'w') as out:
+with open('encodedShroomsV2.csv', 'w') as out:
     out.write(my_string)
 
 
