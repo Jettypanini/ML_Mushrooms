@@ -94,7 +94,7 @@ def main():
                 temp = encode(row[i],i)
                 newcode.append(temp)
         listToString(newcode)
-        result += listToString2(newcode) + ",\n"
+        result += listToString2(newcode) + ","
       
     return result
 
