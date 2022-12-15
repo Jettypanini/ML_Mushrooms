@@ -11,12 +11,12 @@ from scipy.io import loadmat
 
 
 #Load the motherfucker
-filename = 'data/encodedShroomsV2.csv'
+filename = 'data/encodedShroomsV2NoDupes.csv'
 df = pd.read_csv(filename)
 #print(df)
 
 # initializing datasets, filling missing values with zeroes
-train_size = 2 #5700
+train_size = 3000 #300 = 88.7%, 400 = 89.5%, 500 = 90.4%, 550 = 90.4% 600 = 89.7%, 1000 = 89.8, 2000 = 88.1,  3000 = 90.3%
 X = np.empty((train_size, 109), dtype=int)
 y = []
 X_test = np.empty((8124-train_size, 109), dtype=int)
@@ -91,13 +91,13 @@ y_test = np.array(y_test)
 # Setup the parameters you will use for this exercise
 input_layer_size  = 110  # 22 features
 hidden_layer_size = 5   # 5 hidden units
-num_labels = 1          # 1 label, poisonous/edible
+num_labels = 2          # 1 label, poisonous/edible
 
 # Load the weights into variables Theta1 and Theta2
 
 # Theta1 has size 25 x 401
 # Theta2 has size 10 x 26
-Theta1, Theta2 = np.ones((5,110)),np.ones((1,6))
+Theta1, Theta2 = np.ones((5,110)),np.ones((2,6))
 
 # swap first and last columns of Theta2, due to legacy from MATLAB indexing, 
 # since the weight file ex3weights.mat was saved based on MATLAB indexing
@@ -297,4 +297,6 @@ def predict(Theta1, Theta2, X):
     return p
 
 pred = predict(Theta1, Theta2, X)
+
+
 print('Training Set Accuracy: {:.1f}%'.format(np.mean(pred == y) * 100))
