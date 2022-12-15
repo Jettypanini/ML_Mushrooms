@@ -114,7 +114,7 @@ def calcSize():
     print(sum)
 calcSize()
 
-with open('encodedShroomsV2.csv', 'w') as out:
+with open('encodedShroomsV2Enter.csv', 'w') as out:
     out.write(my_string)
 
 
