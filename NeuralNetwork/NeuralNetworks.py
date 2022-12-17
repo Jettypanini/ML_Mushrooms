@@ -39,6 +39,7 @@ for column in df:
                         X_row.append(0)
             X[j] = X_row
         if len(df[column].name) == 112:
+            print("112")
             X_row = []
             if df[column].name[0] == '1':
                 y.append(1)
@@ -54,6 +55,7 @@ for column in df:
             X[j] = X_row
     else:
         if len(df[column].name) == 110:
+            
             X_row = []
             if df[column].name[0] == '1':
                 y_test.append(1)
@@ -68,6 +70,7 @@ for column in df:
                         X_row.append(0)
             X_test[j-train_size] = X_row
         if len(df[column].name) == 112:
+            print("112")
             X_row = []
             if df[column].name[0] == '1':
                 y_test.append(1)
@@ -150,7 +153,7 @@ def predict(Theta1, Theta2, X):
     replace `z` by the required input variable to sigmoid.
     """
     # Make sure the input has two dimensions
-    if X.ndim == 1:
+    if X.ndim == 2:
         X = X[None]  # promote to 2-dimensions
     
     # useful variables
