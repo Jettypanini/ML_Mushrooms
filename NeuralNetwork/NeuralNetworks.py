@@ -6,6 +6,7 @@ from matplotlib import pyplot
 from scipy import optimize
 import math
 import utils
+import matplotlib.pyplot as plt
 # will be used to load MATLAB mat datafile format
 from scipy.io import loadmat
 
@@ -92,214 +93,76 @@ y_test = np.array(y_test)
 
 #22 input layers, 2 output layers
 # Setup the parameters you will use for this exercise
-input_layer_size  = 110  # 22 features
-hidden_layer_size = 5   # 5 hidden units
-num_labels = 2          # 1 label, poisonous/edible
+input_layer_size  = 109  # 22 features
+hidden_layer_size = 25  # 5 hidden units
+num_labels = 2          # 2 labels, poisonous/edible
 
 # Load the weights into variables Theta1 and Theta2
-
-# Theta1 has size 25 x 401
-# Theta2 has size 10 x 26
-Theta1, Theta2 = np.ones((5,110)),np.ones((2,6))
-
-# swap first and last columns of Theta2, due to legacy from MATLAB indexing, 
-# since the weight file ex3weights.mat was saved based on MATLAB indexing
-
-
-# Unroll parameters 
+Theta1, Theta2 = np.ones((25,110)), np.ones((2,26))
 nn_params = np.concatenate([Theta1.ravel(), Theta2.ravel()])
 
-def predict(Theta1, Theta2, X):
-    """
-    Predict the label of an input given a trained neural network.
-    
-    Parameters
-    ----------
-    Theta1 : array_like
-        Weights for the first layer in the neural network.
-        It has shape (2nd hidden layer size x input size)
-    
-    Theta2: array_like
-        Weights for the second layer in the neural network. 
-        It has shape (output layer size x 2nd hidden layer size)
-    
-    X : array_like
-        The image inputs having shape (number of examples x image dimensions).
-    
-    Return 
-    ------
-    p : array_like
-        Predictions vector containing the predicted label for each example.
-        It has a length equal to the number of examples.
-    
-    Instructions
-    ------------
-    Complete the following code to make predictions using your learned neural
-    network. You should set p to a vector containing labels 
-    between 0 to (num_labels-1).
-     
-    Hint
-    ----
-    This code can be done all vectorized using the numpy argmax function.
-    In particular, the argmax function returns the index of the  max element,
-    for more information see '?np.argmax' or search online. If your examples
-    are in rows, then, you can use np.argmax(A, axis=1) to obtain the index
-    of the max for each row.
-    
-    Note
-    ----
-    Remember, we have supplied the `sigmoid` function in the `utils.py` file. 
-    You can use this function by calling `utils.sigmoid(z)`, where you can 
-    replace `z` by the required input variable to sigmoid.
-    """
-    # Make sure the input has two dimensions
-    if X.ndim == 2:
-        X = X[None]  # promote to 2-dimensions
-    
-    # useful variables
-    m = X.shape[0]
-    num_labels = Theta2.shape[0]
+#print('Initializing Neural Network Parameters ...')
+# Theta1 has size 25 x 110
+# Theta2 has size 2 x 26
+initial_Theta1 = utils.randInitializeWeights(input_layer_size, hidden_layer_size)
+initial_Theta2 = utils.randInitializeWeights(hidden_layer_size, num_labels)
 
-    # You need to return the following variables correctly 
-    p = np.zeros(X.shape[0])
+# Unroll parameters
+initial_nn_params = np.concatenate([initial_Theta1.ravel(), initial_Theta2.ravel()], axis=0)
 
-    # ====================== YOUR CODE HERE ======================
-    X = np.concatenate([np.ones((m, 1)), X], axis=1)
-    
-    a2 = utils.sigmoid(X.dot(Theta1.T))
-    a2 = np.concatenate([np.ones((a2.shape[0], 1)), a2], axis=1)
-    
-    p = np.argmax(utils.sigmoid(a2.dot(Theta2.T)), axis = 1)
+utils.checkNNGradients(utils.nnCostFunction)
+
+#  Check gradients by running checkNNGradients
+lambda_ = 3
+utils.checkNNGradients(utils.nnCostFunction, lambda_)
+
+# Also output the costFunction debugging values
+debug_J, _  = utils.nnCostFunction(nn_params, input_layer_size,
+                          hidden_layer_size, num_labels, X, y, lambda_)
+
+#print('\n\nCost at (fixed) debugging parameters (w/ lambda = %f): %f ' % (lambda_, debug_J))
+#print('(for lambda = 3, this value should be about 0.576051)')
+
+#  After you have completed the assignment, change the maxiter to a larger
+#  value to see how more training helps.
+options= {'maxiter': 100}
+
+#  You should also try different values of lambda
+lambda_ = 1
+
+# Create "short hand" for the cost function to be minimized
+costFunction = lambda p: utils.nnCostFunction(p, input_layer_size,
+                                        hidden_layer_size,
+                                        num_labels, X, y, lambda_)
+
+# Now, costFunction is a function that takes in only one argument
+# (the neural network parameters)
+res = optimize.minimize(costFunction,
+                        initial_nn_params,
+                        jac=True,
+                        method='TNC',
+                        options=options)
+
+# get the solution of the optimization
+nn_params = res.x
+        
+# Obtain Theta1 and Theta2 back from nn_params
+Theta1 = np.reshape(nn_params[:hidden_layer_size * (input_layer_size + 1)],
+                    (hidden_layer_size, (input_layer_size + 1)))
+
+Theta2 = np.reshape(nn_params[(hidden_layer_size * (input_layer_size + 1)):],
+                    (num_labels, (hidden_layer_size + 1)))
+
+pred = utils.predict(Theta1, Theta2, X)
+f, axarr = plt.subplots(2,1)
+axarr[0].imshow(Theta1, cmap='binary', interpolation='none')
+axarr[1].imshow(Theta2, cmap='binary', interpolation='none')
+plt.show()
+print('Training Set Accuracy: %f' % (np.mean(pred == y) * 100))
 
 
-    # =============================================================
-    return p
-
-def predictOneVsAll(all_theta, X):
-    """
-    Return a vector of predictions for each example in the matrix X. 
-    Note that X contains the examples in rows. all_theta is a matrix where
-    the i-th row is a trained logistic regression theta vector for the 
-    i-th class. You should set p to a vector of values from 0..K-1 
-    (e.g., p = [0, 2, 0, 1] predicts classes 0, 2, 0, 1 for 4 examples) .
-    
-    Parameters
-    ----------
-    all_theta : array_like
-        The trained parameters for logistic regression for each class.
-        This is a matrix of shape (K x n+1) where K is number of classes
-        and n is number of features without the bias.
-    
-    X : array_like
-        Data points to predict their labels. This is a matrix of shape 
-        (m x n) where m is number of data points to predict, and n is number 
-        of features without the bias term. Note we add the bias term for X in 
-        this function. 
-    
-    Returns
-    -------
-    p : array_like
-        The predictions for each data point in X. This is a vector of shape (m, ).
-    
-    Instructions
-    ------------
-    Complete the following code to make predictions using your learned logistic
-    regression parameters (one-vs-all). You should set p to a vector of predictions
-    (from 0 to num_labels-1).
-    
-    Hint
-    ----
-    This code can be done all vectorized using the numpy argmax function.
-    In particular, the argmax function returns the index of the max element,
-    for more information see '?np.argmax' or search online. If your examples
-    are in rows, then, you can use np.argmax(A, axis=1) to obtain the index 
-    of the max for each row.
-    """
-    m = X.shape[0];
-    num_labels = all_theta.shape[0]
-
-    # You need to return the following variables correctly 
-    p = np.zeros(m)
-
-    # Add ones to the X data matrix
-    X = np.concatenate([np.ones((m, 1)), X], axis=1)
-
-    # ====================== YOUR CODE HERE ======================
-    p = np.argmax(utils.sigmoid(X.dot(all_theta.T)), axis = 1)
 
 
-    
-    # ============================================================
-    return p
 
 
-def predict(Theta1, Theta2, X):
-    """
-    Predict the label of an input given a trained neural network.
-    
-    Parameters
-    ----------
-    Theta1 : array_like
-        Weights for the first layer in the neural network.
-        It has shape (2nd hidden layer size x input size)
-    
-    Theta2: array_like
-        Weights for the second layer in the neural network. 
-        It has shape (output layer size x 2nd hidden layer size)
-    
-    X : array_like
-        The image inputs having shape (number of examples x image dimensions).
-    
-    Return 
-    ------
-    p : array_like
-        Predictions vector containing the predicted label for each example.
-        It has a length equal to the number of examples.
-    
-    Instructions
-    ------------
-    Complete the following code to make predictions using your learned neural
-    network. You should set p to a vector containing labels 
-    between 0 to (num_labels-1).
-     
-    Hint
-    ----
-    This code can be done all vectorized using the numpy argmax function.
-    In particular, the argmax function returns the index of the  max element,
-    for more information see '?np.argmax' or search online. If your examples
-    are in rows, then, you can use np.argmax(A, axis=1) to obtain the index
-    of the max for each row.
-    
-    Note
-    ----
-    Remember, we have supplied the `sigmoid` function in the `utils.py` file. 
-    You can use this function by calling `utils.sigmoid(z)`, where you can 
-    replace `z` by the required input variable to sigmoid.
-    """
-    # Make sure the input has two dimensions
-    if X.ndim == 1:
-        X = X[None]  # promote to 2-dimensions
-    
-    # useful variables
-    m = X.shape[0]
-    num_labels = Theta2.shape[0]
 
-    # You need to return the following variables correctly 
-    p = np.zeros(X.shape[0])
-
-    # ====================== YOUR CODE HERE ======================
-    X = np.concatenate([np.ones((m, 1)), X], axis=1)
-    
-    a2 = utils.sigmoid(X.dot(Theta1.T))
-    a2 = np.concatenate([np.ones((a2.shape[0], 1)), a2], axis=1)
-    
-    p = np.argmax(utils.sigmoid(a2.dot(Theta2.T)), axis = 1)
-
-
-    # =============================================================
-    return p
-
-pred = predict(Theta1, Theta2, X)
-
-
-print('Training Set Accuracy: {:.1f}%'.format(np.mean(pred == y) * 100))
